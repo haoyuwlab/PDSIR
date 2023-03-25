@@ -18,7 +18,9 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The PDSIR R package implements an efficient data augmentation MCMC (DA-MCMC) algorithm for fitting the general stochastic epidemic model to incidence data. This package contains the code used in the paper "Uniformly Ergodic Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to Incidence Data" by R. Morsomme and J. Xu available on ArXiv. The novelty of our DA-MCMC algorithm is the *joint* update of the high-dimensional latent data in a Metropolis-Hastings step. Compared to existing single-site sampler, our block sampler for the latent data significantly improves the mixing of the Markov chain.
+The `PDSIR` R package implements an efficient data augmentation MCMC (DA-MCMC) algorithm for exact Bayesian inference under the semi-Markov stochastic susceptible-infectious-removed model, given discretely observed counts of infections.
+The novelty of this DA-MCMC algorithm is the *joint* update of the high-dimensional latent data in a Metropolis-Hastings step.
+In a Metropolis-Hastings step, the latent data are jointly proposed from a surrogate process carefully designed to closely resemble the target process and from which we can efficiently generate epidemics consistent with the observed data. This yields a method that explores the high-dimensional latent space efficiently, mixes significantly better than single-site samplers, and scales to outbreaks with thousands of infections.
 
 
 ## Installation
@@ -31,6 +33,9 @@ devtools::install_github("rmorsomme/PDSIR")
 ```
 
 ## Example
+
+This package contains the code used in the paper "Uniformly Ergodic Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to Incidence Data" by R. Morsomme and J. Xu available on ArXiv. 
+We use it to fit a semi-Markov susceptible-infectious-removed model to the 2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu\'eck\'edou, Guinea.
 
 This is a basic example which shows you how to solve a common problem:
 
