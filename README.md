@@ -29,7 +29,7 @@ You can install the development version of PDSIR from
 devtools::install_github("rmorsomme/PDSIR")
 ```
 
-## Proof of concept
+## Illustration of synthetic data
 
 We employ the DA-MCMC on artifical data; semi-Marko model
 
@@ -43,29 +43,30 @@ This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(PDSIR)
-## basic example code
 
-# setup
-S0 <- 500 # initial number of susceptible individuals
-I0 <- 5
-t_end <- 6
+# Setup
+set.seed(0)
+S0 <- 500  # initial number of susceptible individuals
+I0 <- 5    # initial number of infectious individuals
 
-iota_dist <- "weibull"
+t_end <- 6 # # duration of observation period
+
+iota_dist <- "weibull" # distribution of the infection periods
 theta <- list(
-  R0 = 2, # reproduction rate
+  R0 = 2,               # basic reproduction number
   lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
   )  
 
-theta <- complete_theta(theta, iota_dist, S0)
+theta <- complete_theta(theta, iota_dist, S0) # add the infection rate parameter, beta, and the average infection period, gamma
 
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
 
 # Trajectories of compartments
-draw_trajectories(SIR, t_end, text_size = 15)
+draw_trajectories(SIR, t_end)
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-synthetic-data-1.png" width="100%" />
 
 Observed data
 
@@ -76,32 +77,13 @@ Y <- observed_data(SIR, K)
 print(Y$ts ) # endpoints of intervals
 #>  [1] 0.0 0.6 1.2 1.8 2.4 3.0 3.6 4.2 4.8 5.4 6.0
 print(Y$T_k) # number of infections per interval
-#>  [1] 11 48 87 98 94 50 28 13  5  1
+#>  [1]  7 11 38 51 67 88 63 39 18  8
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
-
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
+## Illustration on the 2013-2015 outbreak of Ebola in Western Africa
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
 up-to-date. `devtools::build_readme()` is handy for this. You could also
 use GitHub Actions to re-render `README.Rmd` every time you push. An
 example workflow can be found here:
 <https://github.com/r-lib/actions/tree/v1/examples>.
-
-You can also embed plots, for example:
-
-<img src="man/figures/README-pressure-1.png" width="100%" />
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.

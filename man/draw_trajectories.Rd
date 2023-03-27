@@ -11,7 +11,8 @@ draw_trajectories(
   path_figure = NULL,
   id_figure = NULL,
   xlab = "Time",
-  text_size = 30
+  text_size = 15,
+  include_legend = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ draw_trajectories(
 \item{xlab}{label of x-axis}
 
 \item{text_size}{size of text in figure}
+
+\item{include_legend}{logical; wehther to include a legend}
 }
 \value{
 save a figure of the compartments' trajectories
