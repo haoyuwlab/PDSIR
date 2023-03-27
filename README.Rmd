@@ -1,5 +1,7 @@
 ---
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -9,7 +11,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  fig.height = 4,
+  fig.width = 5
 )
 ```
 
@@ -51,18 +55,30 @@ I0 <- 5
 t_end <- 6
 
 iota_dist <- "weibull"
-theta <- list(R0 = 2, lambda = 1, shape = 2) # reproduction rate R_0; parameters of the Weibull distributed infection periods
+theta <- list(
+  R0 = 2, # reproduction rate
+  lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
+  )  
 
 theta <- complete_theta(theta, iota_dist, S0)
 
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
 
-  # Observed data
-#draw_trajectories(SIR, plot_id, path, t_end)
-#  Y     <- observed_data(SIR, K)
-
+# Trajectories of compartments
+draw_trajectories(SIR, t_end, text_size = 15)
 ```
+
+Observed data
+
+```{r}
+K <- 10 # number of intervals
+Y <- observed_data(SIR, K)
+
+print(Y$ts ) # endpoints of intervals
+print(Y$T_k) # number of infections per interval
+```
+
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
 

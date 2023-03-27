@@ -51,16 +51,32 @@ I0 <- 5
 t_end <- 6
 
 iota_dist <- "weibull"
-theta <- list(R0 = 2, lambda = 1, shape = 2) # reproduction rate R_0; parameters of the Weibull distributed infection periods
+theta <- list(
+  R0 = 2, # reproduction rate
+  lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
+  )  
 
 theta <- complete_theta(theta, iota_dist, S0)
 
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
 
-  # Observed data
-#draw_trajectories(SIR, plot_id, path, t_end)
-#  Y     <- observed_data(SIR, K)
+# Trajectories of compartments
+draw_trajectories(SIR, t_end, text_size = 15)
+```
+
+<img src="man/figures/README-example-1.png" width="100%" />
+
+Observed data
+
+``` r
+K <- 10 # number of intervals
+Y <- observed_data(SIR, K)
+
+print(Y$ts ) # endpoints of intervals
+#>  [1] 0.0 0.6 1.2 1.8 2.4 3.0 3.6 4.2 4.8 5.4 6.0
+print(Y$T_k) # number of infections per interval
+#>  [1] 11 48 87 98 94 50 28 13  5  1
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`?

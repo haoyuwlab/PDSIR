@@ -7,10 +7,11 @@
 draw_trajectories(
   SEM,
   t_end = 10,
-  save_figure = TRUE,
+  save_figure = FALSE,
   path_figure = NULL,
   id_figure = NULL,
-  xlab = "time"
+  xlab = "Time",
+  text_size = 30
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ draw_trajectories(
 \item{id_figure}{logical; whether to save the figure}
 
 \item{xlab}{label of x-axis}
+
+\item{text_size}{size of text in figure}
 }
 \value{
 save a figure of the compartments' trajectories

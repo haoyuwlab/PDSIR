@@ -12,6 +12,7 @@
 #' @param path_figure path to save figure
 #' @param id_figure logical; whether to save the figure
 #' @param xlab label of x-axis
+#' @param text_size size of text in figure
 #'
 #' @return save a figure of the compartments' trajectories
 #' @export
@@ -19,8 +20,8 @@
 
 draw_trajectories <- function(
             SEM, t_end = 10,
-            save_figure = TRUE, path_figure = NULL, id_figure = NULL,
-            xlab = "time"
+            save_figure = FALSE, path_figure = NULL, id_figure = NULL,
+            xlab = "Time", text_size = 30
             ) {
 
       t <- SEM[["t"]]
@@ -38,7 +39,7 @@ draw_trajectories <- function(
             ggplot2::ggplot(ggplot2::aes(.data$t, .data$count, color = .data$Compartments)) +
             ggplot2::geom_line(size = 1.5) +
             ggplot2::theme(
-                  text = ggplot2::element_text(size = 35),
+                  text = ggplot2::element_text(size = text_size),
                   legend.position = "none"
             ) +
             ggplot2::labs(x = xlab, y = "Size of compartment")
