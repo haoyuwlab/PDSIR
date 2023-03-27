@@ -30,16 +30,6 @@ rexp_trunc <- function(n, lambda, lower, upper){ # Random Generator
 
 }
 
-rexp2 <- function(n, lambda){ # Random Generator
-
-      U <- stats::runif(n)
-      X <- - log(U) / lambda
-
-      return(X)
-
-}
-
-
 
 #' Log density of the truncated exponential distribution
 #'

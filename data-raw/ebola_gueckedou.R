@@ -1,7 +1,7 @@
 ## code to prepare `ebola_gueckedou` dataset goes here
 
 data_tidy <- read_csv(
-      "Guinea_modified.csv",
+      "inst/extdata/Guinea_modified.csv",
       col_types = readr::cols(
             .default            = readr::col_double(),
             Location            = readr::col_character(),

@@ -1,3 +1,5 @@
+utils::globalVariables(c("."))
+
 #' Include beta to the parameter vector theta
 #'
 #' @param theta parameters (without beta)

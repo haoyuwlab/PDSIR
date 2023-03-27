@@ -8,16 +8,16 @@
 
 The `PDSIR` R package implements an efficient data augmentation MCMC
 (DA-MCMC) algorithm for exact Bayesian inference under the semi-Markov
-stochastic susceptible-infectious-removed model, given discretely
+stochastic susceptible-infectious-removed (SIR) model, given discretely
 observed counts of infections. The novelty of this DA-MCMC algorithm is
-the *joint* update of the high-dimensional latent data in a
-Metropolis-Hastings step. In a Metropolis-Hastings step, the latent data
-are jointly proposed from a surrogate process carefully designed to
-closely resemble the target process and from which we can efficiently
-generate epidemics consistent with the observed data. This yields a
-method that explores the high-dimensional latent space efficiently,
-mixes significantly better than single-site samplers, and scales to
-outbreaks with thousands of infections.
+the *joint* update of the high-dimensional latent data. In a
+Metropolis-Hastings step, the latent data are jointly proposed from a
+surrogate process carefully designed to closely resemble the target
+process and from which we can efficiently generate epidemics consistent
+with the observed data. This yields a MCMC algorithm that explores the
+high-dimensional latent space efficiently, mixes significantly better
+than single-site samplers, and scales to outbreaks with thousands of
+infections.
 
 ## Installation
 
@@ -29,7 +29,9 @@ You can install the development version of PDSIR from
 devtools::install_github("rmorsomme/PDSIR")
 ```
 
-## Example
+## Proof of concept
+
+We employ the DA-MCMC on artifical data; semi-Marko model
 
 This package contains the code used in the paper “Uniformly Ergodic
 Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to
@@ -42,6 +44,23 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(PDSIR)
 ## basic example code
+
+# setup
+S0 <- 500 # initial number of susceptible individuals
+I0 <- 5
+t_end <- 6
+
+iota_dist <- "weibull"
+theta <- list(R0 = 2, lambda = 1, shape = 2) # reproduction rate R_0; parameters of the Weibull distributed infection periods
+
+theta <- complete_theta(theta, iota_dist, S0)
+
+# Simulate artificial data
+SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
+
+  # Observed data
+#draw_trajectories(SIR, plot_id, path, t_end)
+#  Y     <- observed_data(SIR, K)
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`?
