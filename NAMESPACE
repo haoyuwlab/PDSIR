@@ -3,7 +3,7 @@
 export(add_beta)
 export(add_gamma)
 export(complete_theta)
-export(compute_Tk)
+export(compute_Ik)
 export(compute_pi)
 export(contribution_observed_removal)
 export(dexp_trunc_log)

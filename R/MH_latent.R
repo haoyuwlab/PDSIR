@@ -111,7 +111,7 @@ rprop_x <- function(
 
       # Setup
 
-      T_k    <- Y[["T_k"  ]]
+      I_k    <- Y[["I_k"  ]]
       I0     <- Y[["I0"   ]]
       S0     <- Y[["S0"   ]]
       ts     <- Y[["ts"   ]]
@@ -124,17 +124,17 @@ rprop_x <- function(
       lambda <- theta[["lambda"]]
       shape  <- theta[["shape" ]]
 
-      K        <- length(T_k)
-      T_cumsum <- cumsum(T_k)
-      T_sum    <- T_cumsum[K] + I0
-      I_k      <- J_k <- mu_k <- rep(NA, K)
-      U_k      <- c(0, T_cumsum)
+      K        <- length(I_k)
+      I_cumsum <- cumsum(I_k)
+      I_sum    <- I_cumsum[K] + I0
+      I_t_k    <- J_k <- mu_k <- rep(NA, K)
+      U_k      <- c(0, I_cumsum)
       S_k      <- (S0 - U_k)[1 : K]
-      p_i      <- rep(NA, T_sum)
+      p_i      <- rep(NA, I_sum)
 
       if(is.null(x)) { # for initial iteration of Markov chain
-            tau_T  <- rep(Inf, T_sum)
-            tau_J  <- rep(Inf, T_sum)
+            tau_T  <- rep(Inf, I_sum)
+            tau_J  <- rep(Inf, I_sum)
             rho    <- 1
       } else {
             tau_T <- x[["tau_T"]]
@@ -142,11 +142,11 @@ rprop_x <- function(
       }
 
       # Indices of Updates
-      i_update        <- which(as.logical(stats::rbinom(T_sum, 1, rho)))
+      i_update        <- which(as.logical(stats::rbinom(I_sum, 1, rho)))
       tau_J[i_update] <- Inf # tau_J that are updated are set to Inf by default
 
       # Initially Infectious
-      I_k[1]     <- I0
+      I_t_k[1]   <- I0
       i_k        <- 1 : I0
       i_k_update <- intersect(i_k, i_update)
       n_k_update <- length(i_k_update)
@@ -171,10 +171,10 @@ rprop_x <- function(
       # Update trajectories of particles infected in interval k
       for(k in 1 : K) {
 
-            if(T_k[k] > 0) {
+            if(I_k[k] > 0) {
 
                   # Verify that I(t_k) > 0
-                  if(I_k[k] == 0)  return(list(compatible = FALSE))
+                  if(I_t_k[k] == 0)  return(list(compatible = FALSE))
 
                   i_k        <- I0 + (U_k[k] + 1) : U_k[k + 1] # indices of particles infected during interval k
                   i_k_update <- intersect(i_k, i_update)
@@ -183,7 +183,7 @@ rprop_x <- function(
                   if(n_k_update > 0) {
 
                         # Propose tau_T
-                        mu_k[k]  <- if(gener)  beta * I_k[k] * S_k[k]^(-b)  else  beta * I_k[k]
+                        mu_k[k]  <- if(gener)  beta * I_t_k[k] * S_k[k]^(-b)  else  beta * I_t_k[k]
 
                         tau_T[i_k_update] <- propose_tau_T(n_k_update, mu_k[k], ts[k], ts[k+1], approx)
 
@@ -195,19 +195,19 @@ rprop_x <- function(
 
                   } # end-if(n_k_update)
 
-            } # end-if(T_k[k])
+            } # end-if(I_k[k])
 
-            # Update I_k
+            # Update I_t_k
             if(k < K) {
                   J_k[k    ] <- sum(dplyr::between(tau_J, ts[k], ts[k + 1]))
-                  I_k[k + 1] <- I_k[k] + T_k[k] - J_k[k]
+                  I_t_k[k + 1] <- I_t_k[k] + I_k[k] - J_k[k]
             }
 
       } # end-for
 
       # Output
       x_new <- list(
-            compatible = TRUE, tau_T = tau_T, tau_J = tau_J, i_update = i_update, I_k = I_k, S_k = S_k
+            compatible = TRUE, tau_T = tau_T, tau_J = tau_J, i_update = i_update, I_t_k = I_t_k, S_k = S_k
       )
       return(x_new)
 
@@ -266,12 +266,12 @@ dprop_x <- function(
 
       # Setup
 
-      T_k    <- Y[["T_k"  ]]
+      I_k    <- Y[["I_k"  ]]
       I0     <- Y[["I0"   ]]
       ts     <- Y[["ts"   ]]
       t_end  <- Y[["t_end"]]
-      K      <- length(T_k)
-      T_sum  <- sum(T_k) + I0
+      K      <- length(I_k)
+      I_sum  <- sum(I_k) + I0
 
       beta   <- theta[["beta"  ]]
       gamma  <- theta[["gamma" ]]
@@ -280,7 +280,7 @@ dprop_x <- function(
 
       tau_T  <- x    [["tau_T"]]
       tau_J  <- x    [["tau_J"]]
-      I_k    <- x    [["I_k"  ]]
+      I_t_k  <- x    [["I_t_k"]]
       S_k    <- x    [["S_k"  ]]
 
 
@@ -292,13 +292,13 @@ dprop_x <- function(
             # exclude initially infectious particles
             i_update_tau_T <- setdiff(i_update, 1 : I0)
 
-            mu_k  <- if(gener)  beta * I_k * S_k^(-b)  else  beta * I_k
+            mu_k  <- if(gener)  beta * I_t_k * S_k^(-b)  else  beta * I_t_k
             low   <- ts[1 : K      ] # TODO: compute only once and attach to Y
             upp   <- ts[2 : (K + 1)]
 
-            mu_i  <- rep(mu_k, T_k)
-            low_i <- rep(low , T_k)
-            upp_i <- rep(upp , T_k)
+            mu_i  <- rep(mu_k, I_k)
+            low_i <- rep(low , I_k)
+            upp_i <- rep(upp , I_k)
 
             sum(dexp_trunc_log(
                   tau_T[i_update_tau_T     ], mu_i [i_update_tau_T - I0],

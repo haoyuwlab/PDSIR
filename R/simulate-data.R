@@ -196,40 +196,40 @@ simulate_SEM <- function(
 #' @export
 #'
 #'
-compute_Tk <- function(x, ts) {
+compute_Ik <- function(x, ts) {
 
    tau_T <- x[["tau_T"]]
    tau_T <- tau_T[is.finite(tau_T) & tau_T > 0] # exclude infinite values and zeros
 
    K     <- length(ts) - 1
-   T_k   <- rep(NA, K)
+   I_k   <- rep(NA, K)
 
    for(k in 1 : K) {
-      T_k[k] <- sum(dplyr::between(tau_T, ts[k], ts[k + 1]))
+      I_k[k] <- sum(dplyr::between(tau_T, ts[k], ts[k + 1]))
    }
 
-   return(T_k)
+   return(I_k)
 
 }
 
 #' Discrete Incidence Data for Infections (Fast)
 #'
-#' @inheritParams compute_Tk
+#' @inheritParams compute_Ik
 #'
 #' @return a vector of the number of infections in each time interval
 #'
-compute_Tk_MH_fast <- function(x, ts) {
+compute_Ik_MH_fast <- function(x, ts) {
 
    tau_T <- x[["tau_T"]]
 
    K     <- length(ts) - 1
-   T_k   <- rep(NA, K)
+   I_k   <- rep(NA, K)
 
    for(k in 1 : K) {
-      T_k[k] <- sum(dplyr::between(tau_T, ts[k], ts[k + 1]))
+      I_k[k] <- sum(dplyr::between(tau_T, ts[k], ts[k + 1]))
    }
 
-   return(T_k)
+   return(I_k)
 
 }
 
@@ -257,10 +257,10 @@ observed_data <- function(SEM, K = 10, ts = NULL) {
    }
 
    # Observed data
-   T_k <- compute_Tk(x, ts = ts )
+   I_k <- compute_Ik(x, ts = ts )
 
    # Output
-   out <- list(T_k = T_k, I0 = I0, S0 = S0, ts = ts, t_end = t_end)
+   out <- list(I_k = I_k, I0 = I0, S0 = S0, ts = ts, t_end = t_end)
    return(out)
 
 }

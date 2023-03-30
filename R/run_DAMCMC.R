@@ -30,7 +30,7 @@ run_DAMCMC <- function(
                   a_beta = 0.01, b_beta = 1,
                   a_gamma = 1, b_gamma = 1,
                   a_R0 = 2, b_R0 = 2,
-                  a_lambda = 0.01, b_lambda = 1
+                  a_lambda = 1, b_lambda = 1
             )
 ) {
 

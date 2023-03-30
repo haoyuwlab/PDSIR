@@ -19,6 +19,8 @@ high-dimensional latent space efficiently, mixes significantly better
 than single-site samplers, and scales to outbreaks with thousands of
 infections.
 
+contains data for illustration
+
 ## Installation
 
 You can install the development version of PDSIR from
@@ -29,7 +31,7 @@ You can install the development version of PDSIR from
 devtools::install_github("rmorsomme/PDSIR")
 ```
 
-## Illustration of synthetic data
+## Illustration on synthetic data
 
 We employ the DA-MCMC on artifical data; semi-Marko model
 
@@ -45,11 +47,11 @@ This is a basic example which shows you how to solve a common problem:
 library(PDSIR)
 
 # Setup
-set.seed(0)
-S0 <- 500  # initial number of susceptible individuals
+set.seed(1)
+S0 <- 150  # initial number of susceptible individuals
 I0 <- 5    # initial number of infectious individuals
 
-t_end <- 6 # # duration of observation period
+t_end <- 4 # # duration of observation period
 
 iota_dist <- "weibull" # distribution of the infection periods
 theta <- list(
@@ -57,7 +59,7 @@ theta <- list(
   lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
   )  
 
-theta <- complete_theta(theta, iota_dist, S0) # add the infection rate parameter, beta, and the average infection period, gamma
+theta <- complete_theta(theta, iota_dist, S0) # add the infection rate parameter, beta, used in the MCMC (and the average infection period, gamma)
 
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
@@ -75,12 +77,72 @@ K <- 10 # number of intervals
 Y <- observed_data(SIR, K)
 
 print(Y$ts ) # endpoints of intervals
-#>  [1] 0.0 0.6 1.2 1.8 2.4 3.0 3.6 4.2 4.8 5.4 6.0
-print(Y$T_k) # number of infections per interval
-#>  [1]  7 11 38 51 67 88 63 39 18  8
+#>  [1] 0.0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0
+print(Y$I_k) # number of infections per interval
+#>  [1]  6  9 20 28 23 18  9  5  0  1
 ```
 
+Run DA-MCMC for `N=50,000` iterations with (default) prior. The entire
+latent is updated each iteration.
+
+``` r
+out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta)
+
+print(out$run_time)    # run time in seconds
+#> [1] 102.29
+print(out$rate_accept) # acceptance rate in the Metropolis-Hastings step for the latent data
+#> [1] 0.2345
+```
+
+Traceplot for `R_0`. The true value
+is![R_0=2](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_0%3D2 "R_0=2")
+(red dotted line on the figure).
+
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+
 ## Illustration on the 2013-2015 outbreak of Ebola in Western Africa
+
+a total of 410 infections in the prefecture Gueckedou, Guinea.
+
+<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+
+``` r
+
+# set up
+rm(list=ls())
+set.seed(0)
+
+S0 <- 292e3 # https://en.wikipedia.org/wiki/Prefectures_of_Guinea
+I0 <- 5
+t_end <- max(ebola_gueckedou$ts)
+
+ebola_gueckedou$S0 <- S0
+ebola_gueckedou$I0 <- I0
+ebola_gueckedou$t_end <- t_end
+
+iota_dist <- "weibull"
+theta_0 <- list(R0 = 1, lambda = 0.01, shape = 2)  
+
+theta_0 <- complete_theta(theta_0, iota_dist, S0)
+
+N <- 1e6
+thin <- 1e2
+
+# run MCMC
+out <- run_DAMCMC(
+    ebola_gueckedou, N = N, rho = 0.1, iota_dist = iota_dist, thin = thin, theta_0 = theta_0
+)
+
+
+print(out$run_time)
+#> [1] 2917.28
+print(out$rate_accept)
+#> [1] 0.311655
+```
+
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
 up-to-date. `devtools::build_readme()` is handy for this. You could also
