@@ -44,6 +44,7 @@ to fit a semi-Markov susceptible-infectious-removed model to the
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
+
 library(PDSIR)
 
 # Setup

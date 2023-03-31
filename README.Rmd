@@ -14,6 +14,10 @@ knitr::opts_chunk$set(
   out.width = "100%",
   fig.height = 3
 )
+
+library(tidyverse)
+theme_set(theme_bw())
+theme_update(text = ggplot2::element_text(size = 15))
 ```
 
 # PDSIR
@@ -46,6 +50,7 @@ We use it to fit a semi-Markov susceptible-infectious-removed model to the 2013-
 This is a basic example which shows you how to solve a common problem:
 
 ```{r synthetic-data}
+
 library(PDSIR)
 
 # Setup
@@ -106,8 +111,7 @@ THETA %>%
   geom_line() +
 #  geom_hline(yintercept = theta$R0, col = "red", linewidth = 1.5, linetype= 2) + 
   theme(
-#      axis.text.x = ggplot2::element_text(size = 25),
-      text = ggplot2::element_text(size = 15)
+#      axis.text.x = ggplot2::element_text(size = 25)
       ) + 
   labs(y = expression(R[0]))
 ```
@@ -173,8 +177,7 @@ THETA %>%
   #geom_histogram(aes(y = .data$..count../sum(.data$..count..))) +
   geom_histogram(aes(y = after_stat(density))) +
   theme(
-#      axis.text.x = ggplot2::element_text(size = 25),
-      text = ggplot2::element_text(size = 15)
+#      axis.text.x = ggplot2::element_text(size = 25)
       ) +
   labs(x = "Expected infection period", y = "Proportion")
 ```
@@ -184,8 +187,7 @@ THETA %>%
   ggplot(aes(x = Iteration, y = EIP)) +
   geom_line() +
   theme(
-#      axis.text.x = ggplot2::element_text(size = 25),
-      text = ggplot2::element_text(size = 15)
+#      axis.text.x = ggplot2::element_text(size = 25)
       ) + 
   labs(y = "Expected infection period")
 ```
