@@ -18,7 +18,8 @@ Description: Efficient data-augmentation Marko chain Monte Carlo (DA-MCMC)
     explores the high-dimensional latent space efficiently, mixes
     significantly better than single-site samplers, and scales to
     outbreaks with thousands of infections.
-    contains data for illustration.
+    The package contains data from the 2013-2015 outbreak of Ebola 
+    in Western Africa to illustrate the use of the algorithm on real data.
 License: MIT + file LICENSE
 URL: https://github.com/rmorsomme/PDSIR
 BugReports: https://github.com/rmorsomme/PDSIR/issues

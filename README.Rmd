@@ -6,13 +6,14 @@ editor_options:
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%",
-  fig.height = 3
+  out.width = "80%",
+  fig.height = 3,
+  fig.align = "center"
 )
 
 library(tidyverse)
@@ -29,7 +30,7 @@ The `PDSIR` R package implements an efficient data augmentation MCMC (DA-MCMC) a
 The novelty of this DA-MCMC algorithm is the *joint* update of the high-dimensional latent data.
 In a Metropolis-Hastings step, the latent data are jointly proposed from a surrogate process carefully designed to closely resemble the target process and from which we can efficiently generate epidemics consistent with the observed data. This yields a MCMC algorithm that explores the high-dimensional latent space efficiently, mixes significantly better than single-site samplers, and scales to outbreaks with thousands of infections.
 
-contains data for illustration
+The package contains data from the 2013-2015 outbreak of Ebola in Western Africa to illustrate the use of the algorithm on real data.
 
 ## Installation
 
@@ -42,14 +43,9 @@ devtools::install_github("rmorsomme/PDSIR")
 
 ## Illustration on synthetic data
 
-We employ the DA-MCMC on artifical data; semi-Marko model
+We start by generating artificial data from a semi-Markov SIR process with Weibull-distributed infection periods. We stop the process at time `t_end=4`, when the outbreak is not completely over.
 
-This package contains the code used in the paper "Uniformly Ergodic Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to Incidence Data" by R. Morsomme and J. Xu available on ArXiv. 
-We use it to fit a semi-Markov susceptible-infectious-removed model to the 2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu\'eck\'edou, Guinea.
-
-This is a basic example which shows you how to solve a common problem:
-
-```{r synthetic-data}
+```{r simulate-data}
 
 library(PDSIR)
 
@@ -75,17 +71,18 @@ SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
 draw_trajectories(SIR, t_end)
 ```
 
-Observed data
+The observed data consist the number of infections in pre-specified intervals. here, we consider `K=10` intervals of equal length.
 
 ```{r observed-data}
-K <- 10 # number of intervals
+K <- 10 # number of observation intervals
 Y <- observed_data(SIR, K)
 
-print(Y$ts ) # endpoints of intervals
+print(Y$ts ) # endpoints of the intervals
 print(Y$I_k) # number of infections per interval
 ```
 
-Run DA-MCMC for `N=50,000` iterations with (default) prior. The entire latent is updated each iteration.
+We run the DA-MCMC algorithm for `N=50,000` iterations using the (default) weakly informative prior $\beta \sim G(0.01, 1)$ and $\lambda \sim Ga(1,1)$ independently. The entire latent are updated each iteration (`rho=1`, by default).
+The sampler is fast and achieves a healthy acceptance rate in the Metropolis-Hastings step for the latent data.
 
 ```{r, cache=TRUE}
 out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta)
@@ -94,9 +91,9 @@ print(out$run_time)    # run time in seconds
 print(out$rate_accept) # acceptance rate in the Metropolis-Hastings step for the latent data
 ```
 
-Traceplot for `R_0`. The true value is$R_0=2$ (red dotted line on the figure).
+The traceplot for $R_0$ indicates that the chain mixes well. The true value is $R_0=2$ (red dotted line).
 
-```{r, echo=FALSE, message=FALSE}
+```{r synthetic-traceplot, echo=FALSE, message=FALSE}
 library(tidyverse)
 
 THETA <- out$theta %>%
@@ -109,7 +106,7 @@ THETA <- out$theta %>%
 THETA %>%
   ggplot(aes(x = Iteration, y = R0)) +
   geom_line() +
-#  geom_hline(yintercept = theta$R0, col = "red", linewidth = 1.5, linetype= 2) + 
+  geom_hline(yintercept = theta$R0, col = "red", linewidth = 1.5, linetype= 2) + 
   theme(
 #      axis.text.x = ggplot2::element_text(size = 25)
       ) + 
@@ -121,7 +118,7 @@ THETA %>%
 
 a total of `r sum(ebola_gueckedou$I_k)` infections in the prefecture Gueckedou, Guinea.
 
-```{r, echo=FALSE}
+```{r ebola, echo=FALSE}
 tibble(
   time = ebola_gueckedou$dates,
   I_k  = ebola_gueckedou$I_k
@@ -132,7 +129,6 @@ tibble(
 ```
 
 ```{r, cache=TRUE}
-
 # set up
 rm(list=ls())
 set.seed(0)
@@ -163,7 +159,7 @@ print(out$run_time)
 print(out$rate_accept)
 ```
 
-```{r, echo=FALSE, message=FALSE}
+```{r ebola-traceplot, echo=FALSE, message=FALSE}
 THETA <- out$theta %>%
       data.table::rbindlist() %>%
       tibble() %>%
@@ -182,7 +178,7 @@ THETA %>%
   labs(x = "Expected infection period", y = "Proportion")
 ```
 
-```{r, echo=FALSE}
+```{r ebola-histogram, echo=FALSE}
 THETA %>%
   ggplot(aes(x = Iteration, y = EIP)) +
   geom_line() +
@@ -195,3 +191,5 @@ THETA %>%
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/v1/examples>.
 
+This package contains the code used in the paper "Uniformly Ergodic Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to Incidence Data" by R. Morsomme and J. Xu available on ArXiv. 
+We use it to fit a semi-Markov susceptible-infectious-removed model to the 2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu\'eck\'edou, Guinea.

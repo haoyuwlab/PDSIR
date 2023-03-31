@@ -19,7 +19,8 @@ high-dimensional latent space efficiently, mixes significantly better
 than single-site samplers, and scales to outbreaks with thousands of
 infections.
 
-contains data for illustration
+The package contains data from the 2013-2015 outbreak of Ebola in
+Western Africa to illustrate the use of the algorithm on real data.
 
 ## Installation
 
@@ -33,15 +34,9 @@ devtools::install_github("rmorsomme/PDSIR")
 
 ## Illustration on synthetic data
 
-We employ the DA-MCMC on artifical data; semi-Marko model
-
-This package contains the code used in the paper “Uniformly Ergodic
-Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to
-Incidence Data” by R. Morsomme and J. Xu available on ArXiv. We use it
-to fit a semi-Markov susceptible-infectious-removed model to the
-2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu'eck'edou, Guinea.
-
-This is a basic example which shows you how to solve a common problem:
+We start by generating artificial data from a semi-Markov SIR process
+with Weibull-distributed infection periods. We stop the process at time
+`t_end=4`, when the outbreak is not completely over.
 
 ``` r
 
@@ -69,46 +64,54 @@ SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
 draw_trajectories(SIR, t_end)
 ```
 
-<img src="man/figures/README-synthetic-data-1.png" width="100%" />
+<img src="man/figures/README-simulate-data-1.png" width="80%" style="display: block; margin: auto;" />
 
-Observed data
+The observed data consist the number of infections in pre-specified
+intervals. here, we consider `K=10` intervals of equal length.
 
 ``` r
-K <- 10 # number of intervals
+K <- 10 # number of observation intervals
 Y <- observed_data(SIR, K)
 
-print(Y$ts ) # endpoints of intervals
+print(Y$ts ) # endpoints of the intervals
 #>  [1] 0.0 0.4 0.8 1.2 1.6 2.0 2.4 2.8 3.2 3.6 4.0
 print(Y$I_k) # number of infections per interval
 #>  [1]  6  9 20 28 23 18  9  5  0  1
 ```
 
-Run DA-MCMC for `N=50,000` iterations with (default) prior. The entire
-latent is updated each iteration.
+We run the DA-MCMC algorithm for `N=50,000` iterations using the
+(default) weakly informative prior
+![\beta \sim G(0.01, 1)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cbeta%20%5Csim%20G%280.01%2C%201%29 "\beta \sim G(0.01, 1)")
+and
+![\lambda \sim Ga(1,1)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Clambda%20%5Csim%20Ga%281%2C1%29 "\lambda \sim Ga(1,1)")
+independently. The entire latent are updated each iteration (`rho=1`, by
+default). The sampler is fast and achieves a healthy acceptance rate in
+the Metropolis-Hastings step for the latent data.
 
 ``` r
 out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta)
 
 print(out$run_time)    # run time in seconds
-#> [1] 102.29
+#> [1] 64.2
 print(out$rate_accept) # acceptance rate in the Metropolis-Hastings step for the latent data
 #> [1] 0.2345
 ```
 
-Traceplot for `R_0`. The true value
-is![R_0=2](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_0%3D2 "R_0=2")
-(red dotted line on the figure).
+The traceplot for
+![R_0](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_0 "R_0")
+indicates that the chain mixes well. The true value is
+![R_0=2](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_0%3D2 "R_0=2")
+(red dotted line).
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+<img src="man/figures/README-synthetic-traceplot-1.png" width="80%" style="display: block; margin: auto;" />
 
 ## Illustration on the 2013-2015 outbreak of Ebola in Western Africa
 
 a total of 410 infections in the prefecture Gueckedou, Guinea.
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+<img src="man/figures/README-ebola-1.png" width="80%" style="display: block; margin: auto;" />
 
 ``` r
-
 # set up
 rm(list=ls())
 set.seed(0)
@@ -136,17 +139,23 @@ out <- run_DAMCMC(
 
 
 print(out$run_time)
-#> [1] 2917.28
+#> [1] 2966.72
 print(out$rate_accept)
 #> [1] 0.311655
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-ebola-traceplot-1.png" width="80%" style="display: block; margin: auto;" />
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+<img src="man/figures/README-ebola-histogram-1.png" width="80%" style="display: block; margin: auto;" />
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
 up-to-date. `devtools::build_readme()` is handy for this. You could also
 use GitHub Actions to re-render `README.Rmd` every time you push. An
 example workflow can be found here:
 <https://github.com/r-lib/actions/tree/v1/examples>.
+
+This package contains the code used in the paper “Uniformly Ergodic
+Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to
+Incidence Data” by R. Morsomme and J. Xu available on ArXiv. We use it
+to fit a semi-Markov susceptible-infectious-removed model to the
+2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu'eck'edou, Guinea.
