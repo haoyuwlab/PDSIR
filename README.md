@@ -47,15 +47,13 @@ set.seed(1)
 S0 <- 150  # initial number of susceptible individuals
 I0 <- 5    # initial number of infectious individuals
 
-t_end <- 4 # # duration of observation period
+t_end <- 4 # end of observation period
 
 iota_dist <- "weibull" # distribution of the infection periods
 theta <- list(
   R0 = 2,               # basic reproduction number
   lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
-  )  
-
-theta <- complete_theta(theta, iota_dist, S0) # add the infection rate parameter, beta, used in the MCMC (and the average infection period, gamma)
+  )
 
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
@@ -89,10 +87,10 @@ default). The sampler is fast and achieves a healthy acceptance rate in
 the Metropolis-Hastings step for the latent data.
 
 ``` r
-out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta)
+out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta) 
 
 print(out$run_time)    # run time in seconds
-#> [1] 64.2
+#> [1] 154.28
 print(out$rate_accept) # acceptance rate in the Metropolis-Hastings step for the latent data
 #> [1] 0.2345
 ```
@@ -107,14 +105,19 @@ indicates that the chain mixes well. The true value is
 
 ## Illustration on the 2013-2015 outbreak of Ebola in Western Africa
 
-a total of 410 infections in the prefecture Gueckedou, Guinea.
+We now turn to the
+
+We consider the prefecture Gueckedou in Guinea, where a total of 410
+infections were observed between December 2013 and May 2015. The
+observed data consist of the number of infections in each week. These
+incidence counts are shown below.
 
 <img src="man/figures/README-ebola-1.png" width="80%" style="display: block; margin: auto;" />
 
 ``` r
 # set up
 rm(list=ls())
-set.seed(0)
+set.seed(1)
 
 S0 <- 292e3 # https://en.wikipedia.org/wiki/Prefectures_of_Guinea
 I0 <- 5
@@ -127,8 +130,6 @@ ebola_gueckedou$t_end <- t_end
 iota_dist <- "weibull"
 theta_0 <- list(R0 = 1, lambda = 0.01, shape = 2)  
 
-theta_0 <- complete_theta(theta_0, iota_dist, S0)
-
 N <- 1e6
 thin <- 1e2
 
@@ -139,20 +140,14 @@ out <- run_DAMCMC(
 
 
 print(out$run_time)
-#> [1] 2966.72
+#> [1] 4405.47
 print(out$rate_accept)
-#> [1] 0.311655
+#> [1] 0.308215
 ```
 
 <img src="man/figures/README-ebola-traceplot-1.png" width="80%" style="display: block; margin: auto;" />
 
 <img src="man/figures/README-ebola-histogram-1.png" width="80%" style="display: block; margin: auto;" />
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this. You could also
-use GitHub Actions to re-render `README.Rmd` every time you push. An
-example workflow can be found here:
-<https://github.com/r-lib/actions/tree/v1/examples>.
 
 This package contains the code used in the paper “Uniformly Ergodic
 Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to
