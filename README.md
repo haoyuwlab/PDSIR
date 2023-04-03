@@ -36,7 +36,7 @@ devtools::install_github("rmorsomme/PDSIR")
 
 We start by generating artificial data from a semi-Markov SIR process
 with Weibull-distributed infection periods. We stop the process at time
-`t_end=4`, when the outbreak is not completely over.
+`t_end=4`, when the outbreak is not completely over \$I(t_end)=4.
 
 ``` r
 
@@ -64,6 +64,12 @@ draw_trajectories(SIR, t_end)
 
 <img src="man/figures/README-simulate-data-1.png" width="80%" style="display: block; margin: auto;" />
 
+``` r
+
+SIR$I[which.max((SIR$t[SIR$t<t_end]))] # I(t_end): number of infectious individuals at time t=t_end
+#> [1] 4
+```
+
 The observed data consist the number of infections in pre-specified
 intervals. here, we consider `K=10` intervals of equal length.
 
@@ -82,9 +88,9 @@ We run the DA-MCMC algorithm for `N=50,000` iterations using the
 ![\beta \sim G(0.01, 1)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cbeta%20%5Csim%20G%280.01%2C%201%29 "\beta \sim G(0.01, 1)")
 and
 ![\lambda \sim Ga(1,1)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Clambda%20%5Csim%20Ga%281%2C1%29 "\lambda \sim Ga(1,1)")
-independently. The entire latent are updated each iteration (`rho=1`, by
-default). The sampler is fast and achieves a healthy acceptance rate in
-the Metropolis-Hastings step for the latent data.
+independently. The entire latent data are updated each iteration
+(`rho=1`, by default). The sampler is fast and achieves a healthy
+acceptance rate in the Metropolis-Hastings step for the latent data.
 
 ``` r
 out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta) 

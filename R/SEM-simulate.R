@@ -62,13 +62,13 @@ simulate_SEM <- function(
       #
       # Initialization
 
-      tau_T <- tau_J <- rep(Inf, N0)
-      S <- I <- t <- W <- X <- I_tau_t_true <- c() # S, I, R, time, waiting time, type of event, and number of infectious at infection times
+      tau_I <- tau_R <- rep(Inf, N0)
+      S <- I <- t <- W <- X <- I_tau_I_true <- c() # S, I, R, time, waiting time, type of event, and number of infectious at infection times
 
       # Initialize tau's
-      tau_T[1 : I0] <- 0 # TODO: relax assumption that individual initially infected at 0; important for non-Markovian process
+      tau_I[1 : I0] <- 0
       iotas <- simulate_iota(I0, iota_dist, gamma, shape, lambda)
-      tau_J[1 : I0] <- tau_T[1 : I0] + iotas
+      tau_R[1 : I0] <- tau_I[1 : I0] + iotas
 
       # Initialize compartments, time, event type and event number
       S[1] <- S0
@@ -85,11 +85,11 @@ simulate_SEM <- function(
       repeat{
 
             # Compute next removal time
-            not_recovered <- tau_J > t[j]
-            tau_J_next    <- min(tau_J[not_recovered])
+            not_recovered <- tau_R > t[j]
+            tau_R_next    <- min(tau_R[not_recovered])
 
             # Generate candidate infection time
-            tau_T_candidate <- if(S[j] > 0) {
+            tau_I_candidate <- if(S[j] > 0) {
                   mu_j <- if(gener)  beta * S[j]^(1 - b) * I[j]  else beta * S[j] * I[j]
                   t[j] + stats::rexp(1, mu_j)            # candidate infection time
             } else if(S[j] == 0) {            # susceptible pop depleted
@@ -97,27 +97,27 @@ simulate_SEM <- function(
             }
 
             # Event: removal or infection
-            if(tau_T_candidate < tau_J_next) { # infection (SIR) / exposition (SEIR)
+            if(tau_I_candidate < tau_R_next) { # infection (SIR) / exposition (SEIR)
 
-                  I_tau_t_true <- c(I_tau_t_true, I[j]) # sanity check for f_log()
+                  I_tau_I_true <- c(I_tau_I_true, I[j]) # sanity check for f_log()
 
                   n_t <- n_t + 1
                   X[j + 1] <- "t"
-                  t[j + 1] <- tau_T_candidate
+                  t[j + 1] <- tau_I_candidate
                   S[j + 1] <- S[j] - 1
                   I[j + 1] <- I[j] + 1
-                  tau_T[I0 + n_t] <- tau_T_candidate
+                  tau_I[I0 + n_t] <- tau_I_candidate
 
                   # simulate removal time of newly infected
                   iota <- simulate_iota(1, iota_dist, gamma, shape, lambda)
 
-                  tau_J[I0 + n_t] <- tau_T[I0 + n_t] + iota
+                  tau_R[I0 + n_t] <- tau_I[I0 + n_t] + iota
 
-            } else if(tau_J_next <= tau_T_candidate) { # removal
+            } else if(tau_R_next <= tau_I_candidate) { # removal
 
                   n_j <- n_j + 1
                   X[j + 1] <- "j"
-                  t[j + 1] <- tau_J_next
+                  t[j + 1] <- tau_R_next
                   S[j + 1] <- S[j]
                   I[j + 1] <- I[j] - 1
 
@@ -132,18 +132,18 @@ simulate_SEM <- function(
 
       # Events observed before t_end
       t_obs             <- t <= t_end
-      tau_T_obs         <- tau_T <= t_end
-      tau_J_obs         <- tau_J <= t_end
-      tau_T[!tau_T_obs] <- Inf
-      tau_J[!tau_J_obs] <- Inf
+      tau_I_obs         <- tau_I <= t_end
+      tau_R_obs         <- tau_R <= t_end
+      tau_I[!tau_I_obs] <- Inf
+      tau_R[!tau_R_obs] <- Inf
 
       x <- list(
-            compatible = TRUE, tau_T = tau_T, tau_J = tau_J
+            compatible = TRUE, tau_I = tau_I, tau_R = tau_R
       )
 
       # MLE
-      n_t_obs    <- sum(0 < tau_T & is.finite(tau_T))
-      n_j_obs    <- sum(is.finite(tau_J))
+      n_t_obs    <- sum(0 < tau_I & is.finite(tau_I))
+      n_j_obs    <- sum(is.finite(tau_R))
 
       dt              <- diff(c(t[t_obs], t_end))
       integral_I_obs  <- sum(I[t_obs] * dt)
@@ -167,7 +167,7 @@ simulate_SEM <- function(
 
       if(iota_dist == "weibull") {
 
-            lambda_MLE <- n_j_obs / sum( (pmin(tau_J, t_end) - tau_T)[is.finite(tau_T)]^shape )
+            lambda_MLE <- n_j_obs / sum( (pmin(tau_R, t_end) - tau_I)[is.finite(tau_I)]^shape )
             out[["MLE"]][["lambda"]] <- lambda_MLE
 
             # shape_MLE <- optimize(
@@ -198,14 +198,14 @@ simulate_SEM <- function(
 #'
 compute_Ik <- function(x, ts) {
 
-   tau_T <- x[["tau_T"]]
-   tau_T <- tau_T[is.finite(tau_T) & tau_T > 0] # exclude infinite values and zeros
+   tau_I <- x[["tau_I"]]
+   tau_I <- tau_I[is.finite(tau_I) & tau_I > 0] # exclude infinite values and zeros
 
    K     <- length(ts) - 1
    I_k   <- rep(NA, K)
 
    for(k in 1 : K) {
-      I_k[k] <- sum(dplyr::between(tau_T, ts[k], ts[k + 1]))
+      I_k[k] <- sum(dplyr::between(tau_I, ts[k], ts[k + 1]))
    }
 
    return(I_k)
@@ -220,13 +220,13 @@ compute_Ik <- function(x, ts) {
 #'
 compute_Ik_MH_fast <- function(x, ts) {
 
-   tau_T <- x[["tau_T"]]
+   tau_I <- x[["tau_I"]]
 
    K     <- length(ts) - 1
    I_k   <- rep(NA, K)
 
    for(k in 1 : K) {
-      I_k[k] <- sum(dplyr::between(tau_T, ts[k], ts[k + 1]))
+      I_k[k] <- sum(dplyr::between(tau_I, ts[k], ts[k + 1]))
    }
 
    return(I_k)
