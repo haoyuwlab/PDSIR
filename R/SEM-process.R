@@ -48,7 +48,7 @@ draw_trajectories <- function(
             ggplot2::theme(
                   legend.position = legend.position
             ) +
-            ggplot2::labs(x = xlab, y = "size of/ncompartment")
+            ggplot2::labs(x = xlab, y = "size of\ncompartment")
 
 }
 
