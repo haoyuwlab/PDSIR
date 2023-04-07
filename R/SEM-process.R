@@ -19,7 +19,7 @@
 
 draw_trajectories <- function(
             SEM, t_end = 10,
-            xlab = "Time", text_size = 15, include_legend = TRUE
+            xlab = "time", include_legend = FALSE
             ) {
 
       legend.position <- if(include_legend){
@@ -46,7 +46,6 @@ draw_trajectories <- function(
             ggplot2::ggplot(ggplot2::aes(.data$t, .data$count, color = .data$Compartments)) +
             ggplot2::geom_line(size = 1.5) +
             ggplot2::theme(
-                  text = ggplot2::element_text(size = text_size),
                   legend.position = legend.position
             ) +
             ggplot2::labs(x = xlab, y = "size of compartment")

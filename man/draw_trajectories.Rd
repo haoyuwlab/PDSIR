@@ -4,13 +4,7 @@
 \alias{draw_trajectories}
 \title{Draw trajectories of a SEM}
 \usage{
-draw_trajectories(
-  SEM,
-  t_end = 10,
-  xlab = "Time",
-  text_size = 15,
-  include_legend = TRUE
-)
+draw_trajectories(SEM, t_end = 10, xlab = "time", include_legend = FALSE)
 }
 \arguments{
 \item{SEM}{list corresponding to stochastic epidemic process}
@@ -19,9 +13,9 @@ draw_trajectories(
 
 \item{xlab}{label of x-axis}
 
-\item{text_size}{size of text in figure}
-
 \item{include_legend}{logical; wehther to include a legend}
+
+\item{text_size}{size of text in figure}
 }
 \value{
 save a figure of the compartments' trajectories
