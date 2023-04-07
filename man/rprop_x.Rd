@@ -4,7 +4,16 @@
 \alias{rprop_x}
 \title{Generates PD-SIR process conditionally on the observed data}
 \usage{
-rprop_x(theta, Y, gener, b, iota_dist, approx, x = NULL, rho = 1)
+rprop_x(
+  theta,
+  Y,
+  gener = FALSE,
+  b = 1,
+  iota_dist,
+  approx = "ldp",
+  x = NULL,
+  rho = 1
+)
 }
 \arguments{
 \item{theta}{current values of the parameters for the SIR}

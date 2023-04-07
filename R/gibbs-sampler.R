@@ -13,8 +13,8 @@
 gibbs_theta <- function(SS, iota_dist, par_prior, theta, param, Y){
 
       # Setup
-      n_T             <- SS[["n_T"            ]]
-      n_J             <- SS[["n_J"            ]]
+      n_I             <- SS[["n_I"            ]]
+      n_R             <- SS[["n_R"            ]]
       integral_SI     <- SS[["integral_SI"    ]]
       integral_I      <- SS[["integral_I"     ]]
       iota_infectious <- SS[["iota_infectious"]]
@@ -42,14 +42,14 @@ gibbs_theta <- function(SS, iota_dist, par_prior, theta, param, Y){
 
             if(param == "bg") { # theta = (beta, gamma)
 
-                  beta_new   <- stats::rgamma(1, a_beta  + n_T, b_beta  + integral_SI)
-                  gamma_new  <- stats::rgamma(1, a_gamma + n_J, b_gamma + integral_I )
+                  beta_new   <- stats::rgamma(1, a_beta  + n_I, b_beta  + integral_SI)
+                  gamma_new  <- stats::rgamma(1, a_gamma + n_R, b_gamma + integral_I )
                   R0_new     <- S0 * beta_new / gamma_new
 
             } else if (param == "bR") { # theta = (beta, R0)
 
-                  beta_new   <-     stats::rgamma(1, a_beta + n_J + n_T, b_beta + integral_SI + integral_I * S0 / R0_curr)
-                  R0_new     <- 1 / stats::rgamma(1, a_R0   + n_J      , b_R0   + beta_new * S0 * integral_I             )
+                  beta_new   <-     stats::rgamma(1, a_beta + n_R + n_I, b_beta + integral_SI + integral_I * S0 / R0_curr)
+                  R0_new     <- 1 / stats::rgamma(1, a_R0   + n_R      , b_R0   + beta_new * S0 * integral_I             )
                   gamma_new  <- S0 * beta_new / R0_new
 
             } # end-if parameterization
@@ -59,11 +59,11 @@ gibbs_theta <- function(SS, iota_dist, par_prior, theta, param, Y){
       } else if(iota_dist == "weibull") { # non-Markovian process
 
             # Update beta
-            beta_new  <- stats::rgamma(1, a_beta + n_T, b_beta + integral_SI)
+            beta_new  <- stats::rgamma(1, a_beta + n_I, b_beta + integral_SI)
 
             # Update lambda
             sum_iota   <- sum(iota_infectious ^ shape) + sum(iota_removed ^ shape)
-            lambda_new <- stats::rgamma(1, a_lambda + n_J, b_lambda + sum_iota)
+            lambda_new <- stats::rgamma(1, a_lambda + n_R, b_lambda + sum_iota)
 
             # Complete theta
             gamma_new  <- 1 / (lambda_new ^ (- 1 / shape) * gamma(1 + 1 / shape))

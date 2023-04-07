@@ -4,20 +4,20 @@
 \alias{compute_pi}
 \title{Probability of being removed before next observation time}
 \usage{
-compute_pi(theta, tau_T, iota_dist, t_end)
+compute_pi(theta, tau_I, iota_dist, t_end)
 }
 \arguments{
 \item{theta}{parameters}
 
-\item{tau_T}{observed event times}
+\item{tau_I}{observed event times}
 
 \item{iota_dist}{distribution of infection periods}
 
 \item{t_end}{time before which individuals may be removed}
 }
 \value{
-a vector of the probabilities that individual infected at time tau_T are removed before t_end
+a vector of the probabilities that individual infected at time tau_I are removed before t_end
 }
 \description{
-Computes p_i, the probability of being removed before t_end given an infection at time tau_T.
+Computes p_i, the probability of being removed before t_end given an infection at time tau_I.
 }

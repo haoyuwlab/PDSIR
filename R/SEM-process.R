@@ -49,7 +49,7 @@ draw_trajectories <- function(
                   text = ggplot2::element_text(size = text_size),
                   legend.position = legend.position
             ) +
-            ggplot2::labs(x = xlab, y = "Size of compartment")
+            ggplot2::labs(x = xlab, y = "size of compartment")
 
 }
 

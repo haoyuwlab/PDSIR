@@ -18,46 +18,46 @@ suff_stat <- function(x, Y, gener, b, return_SI = FALSE) {
       if(!x[["compatible"]])  return(list(compatible = FALSE))
 
       # Setup
-      tau_T <- x[["tau_T"]]
-      tau_J <- x[["tau_J"]]
+      tau_I <- x[["tau_I"]]
+      tau_R <- x[["tau_R"]]
       t_end <- Y[["t_end"]]
       I0    <- Y[["I0"   ]]
       S0    <- Y[["S0"   ]]
 
 
       # Infected, infectious and recovered
-      infected        <- is.finite(tau_T)
-      infected_during <- infected & tau_T > 0 # excludes initially infectious
-      recovered       <- is.finite(tau_J)
+      infected        <- is.finite(tau_I)
+      infected_during <- infected & tau_I > 0 # excludes initially infectious
+      recovered       <- is.finite(tau_R)
       infectious      <- infected & (! recovered)
 
       # Number of events
-      n_T <- sum(infected_during)
-      n_J <- sum(recovered)
+      n_I <- sum(infected_during)
+      n_R <- sum(recovered)
 
       # Iota
-      iota_removed    <- tau_J[recovered] - tau_T[recovered]
-      iota_infectious <- t_end            - tau_T[infectious]
+      iota_removed    <- tau_R[recovered] - tau_I[recovered]
+      iota_infectious <- t_end            - tau_I[infectious]
       if(any(iota_removed < 1e-12))  return(list(compatible = FALSE))
 
       # Event time
-      tau_T     <- tau_T[infected_during]
-      tau_J     <- tau_J[recovered]
-      tau       <- c(tau_T, tau_J)
+      tau_I     <- tau_I[infected_during]
+      tau_R     <- tau_R[recovered]
+      tau       <- c(tau_I, tau_R)
       order_tau <- order(tau)
 
-      # Compute S(tau), I(tau), I(tau_T)
-      chi     <- c(rep(TRUE, n_T), rep(FALSE, n_J))[order_tau] # type of event (TRUE: infection, FALSE: recovery) # Sanity check: all.equal(X=="t", chi)
+      # Compute S(tau), I(tau), I(tau_I)
+      chi     <- c(rep(TRUE, n_I), rep(FALSE, n_R))[order_tau] # type of event (TRUE: infection, FALSE: recovery) # Sanity check: all.equal(X=="t", chi)
 
       delta_I <- ifelse(chi,  1, -1) # change in I
       delta_S <- ifelse(chi, -1,  0) # change in S
 
       I_tau   <- c(I0, I0 + cumsum(delta_I))
       S_tau   <- c(S0, S0 + cumsum(delta_S))
-      I_tau_T <- I_tau[c(  chi, FALSE)] # include `FALSE` to exclude last element which corresponds to I(t_end)
-      S_tau_T <- S_tau[c(  chi, FALSE)]
+      I_tau_I <- I_tau[c(  chi, FALSE)] # include `FALSE` to exclude last element which corresponds to I(t_end)
+      S_tau_I <- S_tau[c(  chi, FALSE)]
 
-      if(any(I_tau_T == 0))  return(list(compatible = FALSE)) # depletion of infectious particles
+      if(any(I_tau_I == 0))  return(list(compatible = FALSE)) # depletion of infectious particles
 
       # Compute integrals
       tau         <- tau[order_tau]
@@ -72,10 +72,10 @@ suff_stat <- function(x, Y, gener, b, return_SI = FALSE) {
 
       SS <- list( # for MCMC
             compatible = TRUE,
-            n_T = n_T, n_J = n_J,
+            n_I = n_I, n_R = n_R,
             iota_removed = iota_removed, iota_infectious = iota_infectious,
             integral_SI = integral_SI, integral_I = integral_I,
-            I_tau_T = I_tau_T, S_tau_T = S_tau_T
+            I_tau_I = I_tau_I, S_tau_I = S_tau_I
       )
       return(SS)
 

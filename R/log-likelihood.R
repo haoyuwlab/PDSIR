@@ -23,25 +23,25 @@ f_log <- function(theta, SS, gener, b, iota_dist = "exponential") {
       shape  <- theta[["shape" ]]
       lambda <- theta[["lambda"]]
 
-      n_T             <- SS[["n_T"            ]]
-      I_tau_T         <- SS[["I_tau_T"        ]]
-      S_tau_T         <- SS[["S_tau_T"        ]]
+      n_I             <- SS[["n_I"            ]]
+      I_tau_I         <- SS[["I_tau_I"        ]]
+      S_tau_I         <- SS[["S_tau_I"        ]]
       integral_SI     <- SS[["integral_SI"    ]]
       iota_removed    <- SS[["iota_removed"   ]]
       iota_infectious <- SS[["iota_infectious"]]
 
       # # Loglik
       # loglik <- # agent-based likelihood
-      #   n_T   * log(beta) + sum(log(I_tau_T)) +
-      #   n_J   * log(gamma) -
+      #   n_I   * log(beta) + sum(log(I_tau_I)) +
+      #   n_R   * log(gamma) -
       #   beta  * integral_SI -
       #   gamma * integral_I
 
       # contribution of infections
       loglik_infec <- if(gener){
-            n_T * log(beta) + sum(log(I_tau_T) - b * log(S_tau_T)) - beta  * integral_SI
+            n_I * log(beta) + sum(log(I_tau_I) - b * log(S_tau_I)) - beta  * integral_SI
       } else {
-            n_T * log(beta) + sum(log(I_tau_T)                   ) - beta  * integral_SI
+            n_I * log(beta) + sum(log(I_tau_I)                   ) - beta  * integral_SI
       }
 
       # contribution of removals

@@ -6,8 +6,8 @@
 \usage{
 contribution_observed_removal(
   theta,
-  tau_T,
-  tau_J,
+  tau_I,
+  tau_R,
   i_update_obs,
   iota_dist,
   t_end
@@ -16,9 +16,9 @@ contribution_observed_removal(
 \arguments{
 \item{theta}{parameters of SIR model}
 
-\item{tau_T}{infection times}
+\item{tau_I}{infection times}
 
-\item{tau_J}{removal times}
+\item{tau_R}{removal times}
 
 \item{i_update_obs}{indices of observations to update}
 

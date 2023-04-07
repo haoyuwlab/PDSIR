@@ -75,7 +75,7 @@ simulate_SEM <- function(
       I[1] <- I0
       t[1] <- 0
       X[1] <- "no event"
-      n_t  <- n_f <- n_j <- 0
+      n_I  <- n_R <- 0
 
 
       #
@@ -101,21 +101,21 @@ simulate_SEM <- function(
 
                   I_tau_I_true <- c(I_tau_I_true, I[j]) # sanity check for f_log()
 
-                  n_t <- n_t + 1
+                  n_I <- n_I + 1
                   X[j + 1] <- "t"
                   t[j + 1] <- tau_I_candidate
                   S[j + 1] <- S[j] - 1
                   I[j + 1] <- I[j] + 1
-                  tau_I[I0 + n_t] <- tau_I_candidate
+                  tau_I[I0 + n_I] <- tau_I_candidate
 
                   # simulate removal time of newly infected
                   iota <- simulate_iota(1, iota_dist, gamma, shape, lambda)
 
-                  tau_R[I0 + n_t] <- tau_I[I0 + n_t] + iota
+                  tau_R[I0 + n_I] <- tau_I[I0 + n_I] + iota
 
             } else if(tau_R_next <= tau_I_candidate) { # removal
 
-                  n_j <- n_j + 1
+                  n_R <- n_R + 1
                   X[j + 1] <- "j"
                   t[j + 1] <- tau_R_next
                   S[j + 1] <- S[j]
@@ -142,8 +142,8 @@ simulate_SEM <- function(
       )
 
       # MLE
-      n_t_obs    <- sum(0 < tau_I & is.finite(tau_I))
-      n_j_obs    <- sum(is.finite(tau_R))
+      n_I_obs    <- sum(0 < tau_I & is.finite(tau_I))
+      n_R_obs    <- sum(is.finite(tau_R))
 
       dt              <- diff(c(t[t_obs], t_end))
       integral_I_obs  <- sum(I[t_obs] * dt)
@@ -153,8 +153,8 @@ simulate_SEM <- function(
             sum(I[t_obs] * S[t_obs]         * dt)
       }
 
-      beta_MLE   <- n_t_obs / integral_SI_obs
-      gamma_MLE  <- n_j_obs / integral_I_obs
+      beta_MLE   <- n_I_obs / integral_SI_obs
+      gamma_MLE  <- n_R_obs / integral_I_obs
       R0_MLE     <- S0 * beta_MLE / gamma_MLE
 
 
@@ -162,12 +162,12 @@ simulate_SEM <- function(
       out <- list(
             x = x, t = t, X = X, S = S, I = I, t_end = t_end, I0 = I0, S0 = S0,
             MLE = c("beta" = beta_MLE, "gamma" = gamma_MLE, "R0" = R0_MLE),
-            SS = c("n_t" = n_t_obs, "n_j" = n_j_obs, "integral_SI" = integral_SI_obs, "integral_I" = integral_I_obs)
+            SS = c("n_I" = n_I_obs, "n_R" = n_R_obs, "integral_SI" = integral_SI_obs, "integral_I" = integral_I_obs)
       )
 
       if(iota_dist == "weibull") {
 
-            lambda_MLE <- n_j_obs / sum( (pmin(tau_R, t_end) - tau_I)[is.finite(tau_I)]^shape )
+            lambda_MLE <- n_R_obs / sum( (pmin(tau_R, t_end) - tau_I)[is.finite(tau_I)]^shape )
             out[["MLE"]][["lambda"]] <- lambda_MLE
 
             # shape_MLE <- optimize(

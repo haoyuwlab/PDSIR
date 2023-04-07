@@ -2,17 +2,17 @@
 
 #' Probability of being removed before next observation time
 #'
-#' Computes p_i, the probability of being removed before t_end given an infection at time tau_T.
+#' Computes p_i, the probability of being removed before t_end given an infection at time tau_I.
 #'
 #' @param theta parameters
-#' @param tau_T observed event times
+#' @param tau_I observed event times
 #' @param iota_dist distribution of infection periods
 #' @param t_end time before which individuals may be removed
 #'
-#' @return a vector of the probabilities that individual infected at time tau_T are removed before t_end
+#' @return a vector of the probabilities that individual infected at time tau_I are removed before t_end
 #' @export
 #'
-compute_pi <- function(theta, tau_T, iota_dist, t_end) {
+compute_pi <- function(theta, tau_I, iota_dist, t_end) {
 
       # Setup
       gamma  <- theta[["gamma" ]]
@@ -21,9 +21,9 @@ compute_pi <- function(theta, tau_T, iota_dist, t_end) {
 
       # Compute p_i
       p_i <- if(iota_dist == "exponential") {
-            stats::pexp(t_end - tau_T, gamma)
+            stats::pexp(t_end - tau_I, gamma)
       } else if(iota_dist == "weibull") {
-            pweibull2(t_end - tau_T, shape, lambda)
+            pweibull2(t_end - tau_I, shape, lambda)
       }
 
       # Output
@@ -43,17 +43,17 @@ compute_pi <- function(theta, tau_T, iota_dist, t_end) {
 #' @return infection times
 #' @export
 #'
-propose_tau_T <- function(n, mu, lower, upper, approx) {
+propose_tau_I <- function(n, mu, lower, upper, approx) {
 
       stopifnot(approx %in% c("poisson", "ldp"))
 
-      tau_T <- if(approx == "poisson") {
+      tau_I <- if(approx == "poisson") {
             stats::runif(n,     lower, upper)
       } else if(approx == "ldp") {
             rexp_trunc  (n, mu, lower, upper)
       }
 
-      return(tau_T)
+      return(tau_I)
 
 }
 
@@ -66,7 +66,7 @@ propose_tau_T <- function(n, mu, lower, upper, approx) {
 #' @return removal times
 #' @export
 #'
-propose_tau_J <- function(theta, tau_T, iota_dist, t_end) {
+propose_tau_R <- function(theta, tau_I, iota_dist, t_end) {
 
       # Setup
       gamma  <- theta[["gamma" ]]
@@ -75,15 +75,15 @@ propose_tau_J <- function(theta, tau_T, iota_dist, t_end) {
 
       # Compute p_i
       iota_obs <- if(iota_dist == "exponential") {
-            rexp_trunc    (length(tau_T), gamma         , 0, t_end - tau_T)
+            rexp_trunc    (length(tau_I), gamma         , 0, t_end - tau_I)
       } else      if(iota_dist == "weibull") {
-            rweibull2_trunc(length(tau_T), shape, lambda, 0, t_end - tau_T)
+            rweibull2_trunc(length(tau_I), shape, lambda, 0, t_end - tau_I)
       }
 
-      tau_J <- tau_T + iota_obs
+      tau_R <- tau_I + iota_obs
 
       # Output
-      return(tau_J)
+      return(tau_R)
 
 }
 
@@ -105,7 +105,7 @@ propose_tau_J <- function(theta, tau_T, iota_dist, t_end) {
 #'
 rprop_x <- function(
             theta, Y,
-            gener, b, iota_dist, approx,
+            gener = FALSE, b = 1, iota_dist, approx = "ldp",
             x = NULL, rho = 1
 ) {
 
@@ -127,23 +127,23 @@ rprop_x <- function(
       K        <- length(I_k)
       I_cumsum <- cumsum(I_k)
       I_sum    <- I_cumsum[K] + I0
-      I_t_k    <- J_k <- mu_k <- rep(NA, K)
+      I_t_k    <- R_k <- mu_k <- rep(NA, K)
       U_k      <- c(0, I_cumsum)
       S_k      <- (S0 - U_k)[1 : K]
       p_i      <- rep(NA, I_sum)
 
       if(is.null(x)) { # for initial iteration of Markov chain
-            tau_T  <- rep(Inf, I_sum)
-            tau_J  <- rep(Inf, I_sum)
+            tau_I  <- rep(Inf, I_sum)
+            tau_R  <- rep(Inf, I_sum)
             rho    <- 1
       } else {
-            tau_T <- x[["tau_T"]]
-            tau_J <- x[["tau_J"]]
+            tau_I <- x[["tau_I"]]
+            tau_R <- x[["tau_R"]]
       }
 
       # Indices of Updates
       i_update        <- which(as.logical(stats::rbinom(I_sum, 1, rho)))
-      tau_J[i_update] <- Inf # tau_J that are updated are set to Inf by default
+      tau_R[i_update] <- Inf # tau_R that are updated are set to Inf by default
 
       # Initially Infectious
       I_t_k[1]   <- I0
@@ -153,17 +153,17 @@ rprop_x <- function(
 
       if(n_k_update > 0) {
 
-            tau_T[i_k_update] <- 0 # should not be 0 for non-Markovian process
+            tau_I[i_k_update] <- 0 # should not be 0 for non-Markovian process
 
             # Compute p_i
-            p_i[i_k_update] <- compute_pi(theta, tau_T[i_k_update], iota_dist, t_end)
+            p_i[i_k_update] <- compute_pi(theta, tau_I[i_k_update], iota_dist, t_end)
 
             # Sample particles recovering before t_end
             is_obs    <- as.logical(stats::rbinom(n_k_update, 1, p_i[i_k_update]))
-            tau_J_obs <- i_k_update[is_obs] # indices of particles recovering before t_end
+            tau_R_obs <- i_k_update[is_obs] # indices of particles recovering before t_end
 
-            # Propose tau_J (the tau_J not updated are Inf by default)
-            tau_J[tau_J_obs] <- propose_tau_J(theta, tau_T[tau_J_obs], iota_dist, t_end)
+            # Propose tau_R (the tau_R not updated are Inf by default)
+            tau_R[tau_R_obs] <- propose_tau_R(theta, tau_I[tau_R_obs], iota_dist, t_end)
 
       }
 
@@ -182,16 +182,16 @@ rprop_x <- function(
 
                   if(n_k_update > 0) {
 
-                        # Propose tau_T
+                        # Propose tau_I
                         mu_k[k]  <- if(gener)  beta * I_t_k[k] * S_k[k]^(-b)  else  beta * I_t_k[k]
 
-                        tau_T[i_k_update] <- propose_tau_T(n_k_update, mu_k[k], ts[k], ts[k+1], approx)
+                        tau_I[i_k_update] <- propose_tau_I(n_k_update, mu_k[k], ts[k], ts[k+1], approx)
 
-                        # Propose tau_J
-                        p_i[i_k_update]  <- compute_pi(theta, tau_T[i_k_update], iota_dist, t_end)
+                        # Propose tau_R
+                        p_i[i_k_update]  <- compute_pi(theta, tau_I[i_k_update], iota_dist, t_end)
                         is_obs           <- as.logical(stats::rbinom(n_k_update, 1, p_i[i_k_update])) # particles recovering before t_end
-                        tau_J_obs        <- i_k_update[is_obs]
-                        tau_J[tau_J_obs] <- propose_tau_J(theta, tau_T[tau_J_obs], iota_dist, t_end = t_end)
+                        tau_R_obs        <- i_k_update[is_obs]
+                        tau_R[tau_R_obs] <- propose_tau_R(theta, tau_I[tau_R_obs], iota_dist, t_end = t_end)
 
                   } # end-if(n_k_update)
 
@@ -199,15 +199,15 @@ rprop_x <- function(
 
             # Update I_t_k
             if(k < K) {
-                  J_k[k    ] <- sum(dplyr::between(tau_J, ts[k], ts[k + 1]))
-                  I_t_k[k + 1] <- I_t_k[k] + I_k[k] - J_k[k]
+                  R_k[k    ] <- sum(dplyr::between(tau_R, ts[k], ts[k + 1]))
+                  I_t_k[k + 1] <- I_t_k[k] + I_k[k] - R_k[k]
             }
 
       } # end-for
 
       # Output
       x_new <- list(
-            compatible = TRUE, tau_T = tau_T, tau_J = tau_J, i_update = i_update, I_t_k = I_t_k, S_k = S_k
+            compatible = TRUE, tau_I = tau_I, tau_R = tau_R, i_update = i_update, I_t_k = I_t_k, S_k = S_k
       )
       return(x_new)
 
@@ -218,8 +218,8 @@ rprop_x <- function(
 #' Log proposal density of observed removals
 #'
 #' @param theta parameters of SIR model
-#' @param tau_T infection times
-#' @param tau_J removal times
+#' @param tau_I infection times
+#' @param tau_R removal times
 #' @param i_update_obs indices of observations to update
 #' @param iota_dist distribution of infection periods
 #' @param t_end end of observation window
@@ -228,7 +228,7 @@ rprop_x <- function(
 #' @export
 #'
 contribution_observed_removal <- function(
-            theta, tau_T, tau_J, i_update_obs, iota_dist, t_end
+            theta, tau_I, tau_R, i_update_obs, iota_dist, t_end
 ) {
 
       # Setup
@@ -237,11 +237,11 @@ contribution_observed_removal <- function(
       shape  <- theta[["shape" ]]
 
       # loglik
-      iota_obs <- tau_J[i_update_obs] - tau_T[i_update_obs]
+      iota_obs <- tau_R[i_update_obs] - tau_I[i_update_obs]
       loglik <- if(iota_dist == "exponential") {
-            dexp_trunc_log    (iota_obs, gamma         , 0, t_end - tau_T[i_update_obs])
+            dexp_trunc_log    (iota_obs, gamma         , 0, t_end - tau_I[i_update_obs])
       } else if(iota_dist == "weibull") {
-            dweibull2_trunc_log(iota_obs, shape, lambda, 0, t_end - tau_T[i_update_obs])
+            dweibull2_trunc_log(iota_obs, shape, lambda, 0, t_end - tau_I[i_update_obs])
       }
 
       # Output
@@ -278,8 +278,8 @@ dprop_x <- function(
       lambda <- theta[["lambda"]]
       shape  <- theta[["shape" ]]
 
-      tau_T  <- x    [["tau_T"]]
-      tau_J  <- x    [["tau_J"]]
+      tau_I  <- x    [["tau_I"]]
+      tau_R  <- x    [["tau_R"]]
       I_t_k  <- x    [["I_t_k"]]
       S_k    <- x    [["S_k"  ]]
 
@@ -290,7 +290,7 @@ dprop_x <- function(
       } else if(approx == "ldp") { # linear death process
 
             # exclude initially infectious particles
-            i_update_tau_T <- setdiff(i_update, 1 : I0)
+            i_update_tau_I <- setdiff(i_update, 1 : I0)
 
             mu_k  <- if(gener)  beta * I_t_k * S_k^(-b)  else  beta * I_t_k
             low   <- ts[1 : K      ] # TODO: compute only once and attach to Y
@@ -301,16 +301,16 @@ dprop_x <- function(
             upp_i <- rep(upp , I_k)
 
             sum(dexp_trunc_log(
-                  tau_T[i_update_tau_T     ], mu_i [i_update_tau_T - I0],
-                  low_i[i_update_tau_T - I0], upp_i[i_update_tau_T - I0]
+                  tau_I[i_update_tau_I     ], mu_i [i_update_tau_I - I0],
+                  low_i[i_update_tau_I - I0], upp_i[i_update_tau_I - I0]
             ))
       } # end-if(approximation)
 
       # Contribution of removal
-      p_i <- compute_pi(theta, tau_T, iota_dist, t_end)
+      p_i <- compute_pi(theta, tau_I, iota_dist, t_end)
 
-      i_update_obs     <- setdiff(i_update, which(is.infinite(tau_J)))
-      i_update_not_obs <- setdiff(i_update, which(is.finite  (tau_J)))
+      i_update_obs     <- setdiff(i_update, which(is.infinite(tau_R)))
+      i_update_not_obs <- setdiff(i_update, which(is.finite  (tau_R)))
 
       contribution_removal <-
             sum(
@@ -319,7 +319,7 @@ dprop_x <- function(
             sum(
                   log(p_i[i_update_obs]) +
                         contribution_observed_removal(
-                              theta, tau_T, tau_J, i_update_obs, iota_dist, t_end
+                              theta, tau_I, tau_R, i_update_obs, iota_dist, t_end
                         )
             )
 
