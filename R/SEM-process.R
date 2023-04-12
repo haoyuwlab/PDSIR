@@ -9,7 +9,6 @@
 #'
 #' @param SEM list corresponding to stochastic epidemic process
 #' @param xlab label of x-axis
-#' @param text_size size of text in figure
 #' @param include_legend logical; wehther to include a legend
 #'
 #'
@@ -19,7 +18,7 @@
 
 draw_trajectories <- function(
             SEM, t_end = 10,
-            xlab = "time", include_legend = FALSE
+            xlab = "Time", include_legend = FALSE
             ) {
 
       legend.position <- if(include_legend){
@@ -48,7 +47,7 @@ draw_trajectories <- function(
             ggplot2::theme(
                   legend.position = legend.position
             ) +
-            ggplot2::labs(x = xlab, y = "size of\ncompartment")
+            ggplot2::labs(x = xlab, y = "Size of\ncompartment")
 
 }
 
