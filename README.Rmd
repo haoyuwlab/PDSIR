@@ -27,13 +27,12 @@ theme_update(
 # PDSIR
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-The `PDSIR` R package implements an efficient data augmentation MCMC (DA-MCMC) algorithm for exact Bayesian inference under the semi-Markov stochastic susceptible-infectious-removed (SIR) model, given discretely observed counts of infections.
-The novelty of this DA-MCMC algorithm is the *joint* update of the high-dimensional latent data.
-In a Metropolis-Hastings step, the latent data are jointly proposed from a surrogate process carefully designed to closely resemble the target process and from which we can efficiently generate epidemics consistent with the observed data. This yields a MCMC algorithm that explores the high-dimensional latent space efficiently, mixes significantly better than single-site samplers, and scales to outbreaks with thousands of infections.
+The `PDSIR` R package implements an efficient data augmentation MCMC (DA-MCMC) algorithm for exact Bayesian inference under the semi-Markov stochastic susceptible-infectious-removed (SIR) model, given discretely observed counts of infections. The novelty of this DA-MCMC algorithm is the *joint* update of the high-dimensional latent data. In a Metropolis-Hastings step, the latent data are jointly proposed from a surrogate process carefully designed to closely resemble the target process and from which we can efficiently generate epidemics consistent with the observed data. This yields a MCMC algorithm that explores the high-dimensional latent space efficiently, mixes significantly better than single-site samplers, and scales to outbreaks with thousands of infections.
 
-The package contains data from the 2013-2015 outbreak of Ebola in Western Africa to illustrate the use of the algorithm on real data.
+The package also contains data from the 2013-2015 outbreak of Ebola in Western Africa.
 
 ## Installation
 
@@ -46,10 +45,9 @@ devtools::install_github("rmorsomme/PDSIR")
 
 ## Illustration on synthetic data
 
-We start by generating artificial data from a semi-Markov SIR process with Weibull-distributed infection periods. We stop the process at time `t_end=4`, when the outbreak is not completely over $I(t_end)=4.
+We start by generating artificial data from a semi-Markov SIR process with Weibull-distributed infection periods. We stop the process at time `t_end=4`, when the outbreak is not completely over $I(t_{end})=4$.
 
 ```{r simulate-data}
-
 library(PDSIR)
 
 # Setup
@@ -65,13 +63,13 @@ theta <- list(
   lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
   )
 
+
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
 
+
 # Trajectories of compartments
 draw_trajectories(SIR, t_end)
-
-SIR$I[which.max((SIR$t[SIR$t<t_end]))] # I(t_end): number of infectious individuals at time t=t_end
 ```
 
 The observed data consist the number of infections in pre-specified intervals. here, we consider `K=10` intervals of equal length.
@@ -84,8 +82,7 @@ print(Y$ts ) # endpoints of the intervals
 print(Y$I_k) # number of infections per interval
 ```
 
-We run the DA-MCMC algorithm for `N=50,000` iterations using the (default) weakly informative prior $\beta \sim G(0.01, 1)$ and $\lambda \sim Ga(1,1)$ independently. The entire latent data are updated each iteration (`rho=1`, by default).
-The sampler is fast and achieves a healthy acceptance rate in the Metropolis-Hastings step for the latent data.
+We run the DA-MCMC algorithm for `N=50,000` iterations using the (default) weakly informative prior $\beta \sim G(0.01, 1)$ and $\lambda \sim Ga(1,1)$ independently. The entire latent data are updated each iteration (`rho=1`, by default). The sampler is fast and achieves a healthy acceptance rate in the Metropolis-Hastings step for the latent data.
 
 ```{r, cache=TRUE}
 out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta) 
@@ -111,12 +108,9 @@ THETA %>%
   labs(y = expression(R[0]))
 ```
 
-
 ## Illustration on the 2013-2015 outbreak of Ebola in Western Africa
 
-We now turn to the 
-
-We consider the prefecture Gueckedou in Guinea, where a total of `r sum(ebola_gueckedou$I_k)` infections were observed between December 2013 and May 2015. The observed data consist of the number of infections in each week. These incidence counts are shown below.
+We now turn to a case study of the \$2013\$-\$2015\$ outbreak of Ebola Haemorrhagic Fever in Western Africa. We consider the prefecture Gueckedou in Guinea, where a total of `r sum(ebola_gueckedou$I_k)` infections were observed between December 2013 and May 2015. The observed data consist of the number of infections in each week, which are shown below.
 
 ```{r ebola, echo=FALSE}
 tibble(
@@ -125,7 +119,7 @@ tibble(
   ) %>%
   ggplot(aes(time, I_k)) +
   geom_col() +
-  labs(x = "time (weeks)", y = "Counts of infections")
+  labs(x = "Time (weeks)", y = "Weekly counts of\ninfections")
 ```
 
 ```{r, cache=TRUE}
@@ -144,7 +138,7 @@ ebola_gueckedou$t_end <- t_end
 iota_dist <- "weibull"
 theta_0 <- list(R0 = 1, lambda = 0.01, shape = 2)  
 
-N <- 1e6
+N    <- 1e6
 thin <- 1e2
 
 # run MCMC
@@ -153,7 +147,7 @@ out <- run_DAMCMC(
 )
 
 
-print(out$run_time)
+print(out$run_time) # seconds
 print(out$rate_accept)
 ```
 
@@ -162,22 +156,24 @@ THETA <- out$theta %>%
       data.table::rbindlist() %>%
       tibble() %>%
       mutate(
-        Iteration = 1:nrow(.),
+        iteration = (1:nrow(.))*thin,
+        iteration_1000 = iteration / 1000,
         EIP = lambda^{-1/shape}*gamma(1+1/shape) # expectation of weibull distribution
         )
 
 THETA %>%
   ggplot(aes(x = EIP)) +
   geom_histogram(aes(y = after_stat(density))) +
-  labs(x = "Expected infection period", y = "Proportion")
+  labs(x = "Expection of infection period", y = "Density")
 ```
 
 ```{r ebola-histogram, echo=FALSE}
 THETA %>%
-  ggplot(aes(x = Iteration, y = EIP)) +
+  ggplot(aes(x = iteration_1000, y = EIP)) +
   geom_line() +
-  labs(y = "Expected infection period")
+  labs(x = "Iteration (in 1,000)", y = "Expectation of\ninfection period")
 ```
 
-This package contains the code used in the paper "Uniformly Ergodic Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to Incidence Data" by R. Morsomme and J. Xu available on ArXiv. 
-We use it to fit a semi-Markov susceptible-infectious-removed model to the 2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu\'eck\'edou, Guinea.
+## Reproducing the results in the paper Exact Inference for Stochastic Epidemic Models via Uniformly Ergodic Block Sampling
+
+The GitHub repository [PDSIR-article](https://github.com/rmorsomme/PDSIR-article) contains the `R` scripts for reproducing the analyses and figures present in the paper Exact Inference for Stochastic Epidemic Models via Uniformly Ergodic Block Sampling by R. Morsomme and J. Xu available on ArXiv.

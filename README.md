@@ -19,8 +19,8 @@ high-dimensional latent space efficiently, mixes significantly better
 than single-site samplers, and scales to outbreaks with thousands of
 infections.
 
-The package contains data from the 2013-2015 outbreak of Ebola in
-Western Africa to illustrate the use of the algorithm on real data.
+The package also contains data from the 2013-2015 outbreak of Ebola in
+Western Africa.
 
 ## Installation
 
@@ -36,10 +36,10 @@ devtools::install_github("rmorsomme/PDSIR")
 
 We start by generating artificial data from a semi-Markov SIR process
 with Weibull-distributed infection periods. We stop the process at time
-`t_end=4`, when the outbreak is not completely over \$I(t_end)=4.
+`t_end=4`, when the outbreak is not completely over
+![I(t\_{end})=4](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;I%28t_%7Bend%7D%29%3D4 "I(t_{end})=4").
 
 ``` r
-
 library(PDSIR)
 
 # Setup
@@ -55,20 +55,16 @@ theta <- list(
   lambda = 1, shape = 2 # parameters of the Weibull distribution for the infection periods
   )
 
+
 # Simulate artificial data
 SIR <- simulate_SEM(S0, I0, t_end, theta, iota_dist)
+
 
 # Trajectories of compartments
 draw_trajectories(SIR, t_end)
 ```
 
 <img src="man/figures/README-simulate-data-1.png" width="80%" style="display: block; margin: auto;" />
-
-``` r
-
-SIR$I[which.max((SIR$t[SIR$t<t_end]))] # I(t_end): number of infectious individuals at time t=t_end
-#> [1] 4
-```
 
 The observed data consist the number of infections in pre-specified
 intervals. here, we consider `K=10` intervals of equal length.
@@ -96,7 +92,7 @@ acceptance rate in the Metropolis-Hastings step for the latent data.
 out <- run_DAMCMC(Y, N = 5e4, iota_dist = iota_dist, theta_0 = theta) 
 
 print(out$run_time)    # run time in seconds
-#> [1] 154.28
+#> [1] 103.77
 print(out$rate_accept) # acceptance rate in the Metropolis-Hastings step for the latent data
 #> [1] 0.2345
 ```
@@ -111,12 +107,11 @@ indicates that the chain mixes well. The true value is
 
 ## Illustration on the 2013-2015 outbreak of Ebola in Western Africa
 
-We now turn to the
-
-We consider the prefecture Gueckedou in Guinea, where a total of 410
-infections were observed between December 2013 and May 2015. The
-observed data consist of the number of infections in each week. These
-incidence counts are shown below.
+We now turn to a case study of the \$2013\$-\$2015\$ outbreak of Ebola
+Haemorrhagic Fever in Western Africa. We consider the prefecture
+Gueckedou in Guinea, where a total of 410 infections were observed
+between December 2013 and May 2015. The observed data consist of the
+number of infections in each week, which are shown below.
 
 <img src="man/figures/README-ebola-1.png" width="80%" style="display: block; margin: auto;" />
 
@@ -136,7 +131,7 @@ ebola_gueckedou$t_end <- t_end
 iota_dist <- "weibull"
 theta_0 <- list(R0 = 1, lambda = 0.01, shape = 2)  
 
-N <- 1e6
+N    <- 1e6
 thin <- 1e2
 
 # run MCMC
@@ -145,8 +140,8 @@ out <- run_DAMCMC(
 )
 
 
-print(out$run_time)
-#> [1] 4405.47
+print(out$run_time) # seconds
+#> [1] 5793.27
 print(out$rate_accept)
 #> [1] 0.308215
 ```
@@ -155,8 +150,10 @@ print(out$rate_accept)
 
 <img src="man/figures/README-ebola-histogram-1.png" width="80%" style="display: block; margin: auto;" />
 
-This package contains the code used in the paper “Uniformly Ergodic
-Data-Augmented MCMC for Fitting the General Stochastic Epidemic Model to
-Incidence Data” by R. Morsomme and J. Xu available on ArXiv. We use it
-to fit a semi-Markov susceptible-infectious-removed model to the
-2013-2015 outbreak of Ebola Haemorrhagic Fever in Gu'eck'edou, Guinea.
+## Reproducing the results in the paper Exact Inference for Stochastic Epidemic Models via Uniformly Ergodic Block Sampling
+
+The GitHub repository
+[PDSIR-article](https://github.com/rmorsomme/PDSIR-article) contains the
+`R` scripts for reproducing the analyses and figures present in the
+paper Exact Inference for Stochastic Epidemic Models via Uniformly
+Ergodic Block Sampling by R. Morsomme and J. Xu available on ArXiv.
